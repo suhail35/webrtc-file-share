@@ -1,0 +1,8 @@
+flask==2.3.3
+flask-socketio==5.3.4
+flask-cors==4.0.0
+python-socketio==5.9.0
+eventlet==0.33.3
+python-dotenv==1.0.0  # Для загрузки .env
+pytest==7.4.0  # Для тестов
+pytest-cov==4.1.0

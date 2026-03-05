@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>P2P File Share - Отправить</title>
+    <!-- Bootstrap CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/js/socket.io.min.js"></script>
+    <style>
+        .container { max-width: 800px; margin-top: 50px; }
+        .progress { height: 25px; margin: 20px 0; }
+        .card { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">📤 Отправить файл</h3>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button id="createRoomBtn" class="btn btn-primary btn-lg">Создать комнату</button>
+                </div>
+
+                <div id="roomInfo" class="alert alert-info mt-3" style="display: none;">
+                    <h5>Комната создана!</h5>
+                    <p>ID комнаты: <strong id="roomIdDisplay"></strong></p>
+                    <p>Отправьте получателю ссылку:</p>
+                    <div class="input-group">
+                        <input type="text" id="shareLink" class="form-control" readonly>
+                        <button class="btn btn-outline-secondary" onclick="copyLink()">Копировать</button>
+                    </div>
+                </div>
+
+                <div id="fileSection" style="display: none;">
+                    <hr>
+                    <div class="mb-3">
+                        <label for="fileInput" class="form-label">Выберите файл:</label>
+                        <input type="file" class="form-control" id="fileInput">
+                    </div>
+
+                    <div class="progress" style="display: none;">
+                        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                             role="progressbar" style="width: 0%">0%</div>
+                    </div>
+
+                    <div id="fileInfo" class="alert alert-secondary"></div>
+
+                    <button id="sendBtn" class="btn btn-success" disabled>Отправить файл</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Скрытое поле для роли - ВНЕ fileSection -->
+    <input type="hidden" id="pageRole" value="sender">
+
+    <script src="/js/webrtc-client.js"></script>
+    <script>
+        // Ждем загрузки DOM перед инициализацией
+        document.addEventListener('DOMContentLoaded', function() {
+            // Создаем клиент ТОЛЬКО после полной загрузки DOM
+            window.client = new WebRTCFileShare();
+
+            document.getElementById('createRoomBtn').addEventListener('click', () => {
+                window.client.createRoom();
+            });
+
+            // Обработчик выбора файла
+            const fileInput = document.getElementById('fileInput');
+            const sendBtn = document.getElementById('sendBtn');
+
+            if (fileInput && sendBtn) {
+                fileInput.addEventListener('change', (e) => {
+                    window.client.selectedFile = e.target.files[0];
+                    if (window.client.selectedFile) {
+                        document.getElementById('fileInfo').innerHTML = `
+                            <strong>Файл:</strong> ${window.client.selectedFile.name}<br>
+                            <strong>Размер:</strong> ${(window.client.selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                        `;
+                        // Проверяем готовность канала перед активацией кнопки
+                        if (window.client.isDataChannelReady) {
+                            sendBtn.disabled = false;
+                        }
+                    }
+                });
+
+                sendBtn.addEventListener('click', () => {
+                    window.client.sendFile(window.client.selectedFile);
+                });
+            }
+        });
+
+        function copyLink() {
+            const link = document.getElementById('shareLink');
+            link.select();
+            document.execCommand('copy');
+            alert('Ссылка скопирована!');
+        }
+    </script>
+</body>
+</html>

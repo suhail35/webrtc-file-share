@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>P2P File Share - Получить</title>
+    <!-- Bootstrap CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/js/socket.io.min.js"></script>
+    <style>
+        .container { max-width: 800px; margin-top: 50px; }
+        .progress { height: 25px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h3 class="mb-0">📥 Получить файл</h3>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="roomId" class="form-label">Введите ID комнаты:</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="roomId" placeholder="Например: abc12345">
+                        <button id="joinRoomBtn" class="btn btn-primary">Подключиться</button>
+                    </div>
+                </div>
+
+                <div id="connectionState" class="small text-muted mb-2"></div>
+                <div id="status" class="alert alert-secondary">
+                    Ожидание подключения к комнате...
+                </div>
+                <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+
+                <div class="progress" style="display: none;">
+                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                         role="progressbar" style="width: 0%">0%</div>
+                </div>
+
+                <div id="downloadSection" style="display: none;">
+                    <hr>
+                    <button id="downloadBtn" class="btn btn-success btn-lg w-100">Скачать файл</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="hidden" id="pageRole" value="receiver">
+
+    <script src="/js/webrtc-client.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            window.client = new WebRTCFileShare();
+
+            client.socket.on('error', (data) => {
+                const errorDiv = document.getElementById('errorMessage');
+                errorDiv.textContent = data.message;
+                errorDiv.style.display = 'block';
+                setTimeout(() => errorDiv.style.display = 'none', 5000);
+            });
+
+            document.getElementById('joinRoomBtn').addEventListener('click', () => {
+                const roomId = document.getElementById('roomId').value.trim();
+                if (roomId) {
+                    window.client.joinRoom(roomId);
+                } else {
+                    alert('Введите ID комнаты');
+                }
+            });
+
+            // Автоматическое извлечение room ID из URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomFromUrl = urlParams.get('room');
+            if (roomFromUrl) {
+                document.getElementById('roomId').value = roomFromUrl;
+                setTimeout(() => {
+                    document.getElementById('joinRoomBtn').click();
+                }, 500);
+            }
+        });
+    </script>
+</body>
+</html>

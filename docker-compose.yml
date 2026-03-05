@@ -1,0 +1,99 @@
+version: '3.8'
+
+networks:
+  webrtc-network:
+    driver: bridge
+
+volumes:
+  uploads_data:
+  turn_logs:
+
+services:
+  signaling-server:
+    build:
+      context: ./signaling
+      dockerfile: Dockerfile
+    container_name: webrtc-signaling
+    restart: always
+    ports:
+      - "127.0.0.1:5000:5000"  # WebSocket порт
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - TURN_SECRET=${TURN_SECRET}
+      - FLASK_ENV=${FLASK_ENV}
+      - PUBLIC_IP=${PUBLIC_IP}
+    volumes:
+      - ./signaling/config:/app/config:ro
+      - ./signaling/logs:/app/logs
+      - uploads_data:/tmp/uploads
+    networks:
+      - webrtc-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # 2. TURN/STUN СЕРВЕР
+  coturn:
+    image: instrumentisto/coturn:latest
+    container_name: webrtc-turn
+    restart: always
+    network_mode: "host"
+    volumes:
+      - ./turn/turnserver.conf:/etc/coturn/turnserver.conf:ro  # Конфигурация
+      - ./web/ssl:/etc/coturn/certs:ro
+      - turn_logs:/var/log/turnserver
+    environment:
+      - TURN_USERNAME=${TURN_USERNAME}
+      - TURN_PASSWORD=${TURN_PASSWORD}
+      - TURN_REALM=${DOMAIN}
+      - TURN_SECRET=${TURN_SECRET}
+      - PUBLIC_IP=${PUBLIC_IP}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # 3. ВЕБ-СЕРВЕР
+  web-server:
+    image: nginx:alpine
+    container_name: webrtc-web
+    restart: always
+    ports:
+      - "${WEB_PORT}:80"
+      - "${WEB_SSL_PORT}:443"
+    volumes:
+      - ./web/html:/usr/share/nginx/html:ro  # Клиентские файлы
+      - ./web/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./web/ssl:/etc/nginx/ssl:ro  # SSL сертификаты
+      - uploads_data:/tmp/uploads:ro
+    environment:
+      - DOMAIN=${DOMAIN}
+      - PUBLIC_IP=${PUBLIC_IP}
+      - TURN_PORT=${TURN_PORT}
+      - TURN_USERNAME=${TURN_USERNAME}
+      - TURN_PASSWORD=${TURN_PASSWORD}
+    depends_on:
+      signaling-server:
+        condition: service_healthy
+    networks:
+      - webrtc-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+

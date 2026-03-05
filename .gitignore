@@ -1,0 +1,55 @@
+# Environment files
+.env
+.env.*
+!.env.example  # Исключение: пример можно показать
+
+# SSL certificates
+web/ssl/
+**/*.pem
+**/*.key
+**/*.crt
+**/*.csr
+
+# Uploads
+**/uploads/
+**/tmp/uploads
+**/uploads_data/
+**/*.bin
+**/*.tmp
+
+# Logs
+**/*.log
+**/logs/
+**/turn/logs/
+**/signaling/logs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docker
+**/Dockerfile.dev
+**/.dockerignore
+**/docker-compose.dev.yml
+**/docker-compose.override.yml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Проект-специфичные
+**/config/production.json
+**/config/secrets.json
+
+# Пример файла .env (чтобы показать структуру)
+!.env.example
