@@ -65,8 +65,8 @@ curl -o "мой_файл.docx" https://station307.suhail35.ru/d/abc12345
 ### Быстрый деплой
 ```bash
 # Клонирование
-git clone https://github.com/yourusername/p2p-file-share.git
-cd p2p-file-share
+git clone https://github.com/suhail35/webrtc-file-share.git
+cd webrtc-file-share
 
 # Настройка
 cp .env.example .env
@@ -92,7 +92,7 @@ TURN_PASSWORD=... # openssl rand -hex 16
 ## 📁 Структура проекта
 
 ```
-p2p-file-share/
+webrtc-file-share/
 ├── .env                      # Переменные окружения
 ├── docker-compose.yml        # Docker Compose конфиг
 ├── deploy.sh                  # Скрипт деплоя
