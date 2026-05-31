@@ -198,16 +198,14 @@ def handle_download(file_id):
             download_name=ascii_name,
             mimetype='application/octet-stream'
         )
-
         # Удаляем оба файла после скачивания
-        @response.call_on_close
-        def cleanup():
-            try:
-                os.remove(file_info['path'])
-                os.remove(ascii_path)
-                del app.files[file_id]
-            except:
-                pass
+        try:
+            os.remove(file_info['path'])
+            os.remove(ascii_path)
+            del app.files[file_id]
+        except:
+            pass
+        return response
     else:
         response = send_file(
             file_info['path'],
@@ -217,14 +215,11 @@ def handle_download(file_id):
         )
 
     # Удаляем после скачивания
-    @response.call_on_close
-    def cleanup():
-        try:
-            os.remove(file_info['path'])
-            del app.files[file_id]
-        except:
-            pass
-
+    try:
+        os.remove(file_info['path'])
+        del app.files[file_id]
+    except:
+        pass
     return response
 
 
